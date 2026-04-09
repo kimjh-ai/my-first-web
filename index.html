@@ -7,6 +7,66 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="auth-bar">
+        <div id="auth-buttons">
+            <div class="auth-loading"></div>
+        </div>
+    </div>
+
     <h1>괴도피그</h1>
+
+    <!-- Clerk 공식 CDN -->
+    <script
+        async
+        crossorigin="anonymous"
+        data-clerk-publishable-key="pk_test_Y2xlYW4tbXVsbGV0LTExLmNsZXJrLmFjY291bnRzLmRldiQ"
+        src="https://clean-mullet-11.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+        type="text/javascript"
+    ></script>
+    <script>
+        const authContainer = document.getElementById('auth-buttons');
+
+        function renderAuth(clerk) {
+            if (clerk.user) {
+                const user = clerk.user;
+                const avatarUrl = user.imageUrl;
+                const displayName = user.firstName || user.username || '유저';
+
+                authContainer.innerHTML = `
+                    <div class="user-area">
+                        <img class="user-avatar" src="${avatarUrl}" alt="${displayName}" title="${displayName}" />
+                        <span class="user-name">${displayName}</span>
+                        <button class="btn btn-signout" id="signout-btn">로그아웃</button>
+                    </div>
+                `;
+
+                document.getElementById('signout-btn').addEventListener('click', async () => {
+                    await clerk.signOut();
+                    renderAuth(clerk);
+                });
+            } else {
+                authContainer.innerHTML = `
+                    <button class="btn btn-signin" id="signin-btn">🔑 로그인</button>
+                `;
+
+                document.getElementById('signin-btn').addEventListener('click', () => {
+                    clerk.openSignIn({
+                        afterSignInUrl: window.location.href,
+                        afterSignUpUrl: window.location.href,
+                    });
+                });
+            }
+        }
+
+        window.addEventListener('load', async () => {
+            try {
+                await window.Clerk.load();
+                renderAuth(window.Clerk);
+            } catch (err) {
+                console.error('Clerk 초기화 오류:', err);
+                authContainer.innerHTML = `<div class="key-warning">Clerk 오류: ${err.message}</div>`;
+            }
+        });
+    </script>
 </body>
 </html>
